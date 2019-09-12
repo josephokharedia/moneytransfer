@@ -56,6 +56,6 @@ class DefaultMoneyTransferServiceTest {
         verify(accountRepository).getAccountByAccountNumber(toAccount.getAccountNumber());
 
         verify(accountRepository).updateBalance(fromAccount.getAccountNumber(), fromAccount.getBalance());
-        verify(accountRepository).updateBalance(toAccount.getAccountNumber(), fromAccount.getBalance());
+        verify(accountRepository).updateBalance(toAccount.getAccountNumber(), toAccount.getBalance());
     }
 }
