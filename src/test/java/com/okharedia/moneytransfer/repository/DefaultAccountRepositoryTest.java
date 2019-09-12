@@ -40,8 +40,8 @@ class DefaultAccountRepositoryTest {
         BigDecimal newBalance = BigDecimal.valueOf(20);
         Account testAccount = new Account(TEST_ACCOUNT_NUMBER);
         testAccount.setBalance(newBalance);
-        accountRepository.updateBalanceAtomically(testAccount);
-        Optional<Account> account = accountRepository.accounts.stream()
+        accountRepository.saveAtomically(testAccount);
+        Optional<Account> account = accountRepository.ACCOUNTS.stream()
                 .filter(a -> TEST_ACCOUNT_NUMBER.equalsIgnoreCase(a.getAccountNumber()))
                 .findAny();
 

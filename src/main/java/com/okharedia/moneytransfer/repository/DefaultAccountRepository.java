@@ -10,25 +10,35 @@ import java.util.concurrent.CopyOnWriteArrayList;
 
 public class DefaultAccountRepository implements AccountRepository {
 
-    List<Account> accounts;
+    List<Account> ACCOUNTS;
 
-    public DefaultAccountRepository(List<Account> accounts) {
-        this.accounts = new CopyOnWriteArrayList<>(accounts);
+    public DefaultAccountRepository(List<Account> ACCOUNTS) {
+        this.ACCOUNTS = new CopyOnWriteArrayList<>(ACCOUNTS);
     }
 
     @Override
-    public void updateBalanceAtomically(Account... accounts) throws AccountNotFoundException {
+    public void saveAtomically(Account... accounts) throws AccountNotFoundException {
         for (Account account : accounts) {
-            Account _account = getAccountByAccountNumber(account.getAccountNumber())
-                    .orElseThrow(() -> new AccountNotFoundException(account.getAccountNumber()));
-            _account.setBalance(account.getBalance());
+
+            int idx = this.ACCOUNTS.indexOf(account);
+            if (idx == -1) {
+                throw new AccountNotFoundException(account.getAccountNumber());
+            }
+
+            this.ACCOUNTS.set(idx, account);
         }
     }
 
     @Override
     public Optional<Account> getAccountByAccountNumber(String accountNumber) {
-        return accounts.stream()
+        return ACCOUNTS.stream()
                 .filter(a -> a.getAccountNumber().equalsIgnoreCase(accountNumber))
-                .findFirst();
+                .findFirst()
+                .map(a -> {
+                    Account account = new Account(a.getAccountNumber());
+                    account.setBalance(a.getBalance());
+                    return account;
+                });
+
     }
 }

@@ -60,7 +60,7 @@ class DefaultMoneyTransferServiceTest {
         verify(accountRepository).getAccountByAccountNumber(toAccount.getAccountNumber());
 
         ArgumentCaptor<Account> argumentCaptor = ArgumentCaptor.forClass(Account.class);
-        verify(accountRepository).updateBalanceAtomically(argumentCaptor.capture());
+        verify(accountRepository).saveAtomically(argumentCaptor.capture());
         List<Account> accounts = argumentCaptor.getAllValues();
         assert accounts.size() == 2;
         assert !(isDiffBetweenAccountList(accounts, Arrays.asList(fromAccount, toAccount)));

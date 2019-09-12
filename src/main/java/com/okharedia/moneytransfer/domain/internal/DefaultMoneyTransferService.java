@@ -25,6 +25,6 @@ public class DefaultMoneyTransferService implements MoneyTransferService {
         fromAccount.withdraw(amount);
         toAccount.deposit(amount);
 
-        accountRepository.updateBalanceAtomically(fromAccount, toAccount);
+        accountRepository.saveAtomically(fromAccount, toAccount);
     }
 }

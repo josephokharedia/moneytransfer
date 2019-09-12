@@ -10,7 +10,7 @@ public class H2DatabaseAccountRepository implements AccountRepository {
 
 
     @Override
-    public void updateBalanceAtomically(Account... accounts) throws AccountNotFoundException {
+    public void saveAtomically(Account... accounts) throws AccountNotFoundException {
 
     }
 

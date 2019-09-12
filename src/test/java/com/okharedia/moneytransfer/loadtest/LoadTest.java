@@ -107,7 +107,7 @@ class LoadTest {
 
     private void assertBalance(String accountNumber, BigDecimal balance) {
         Account account = repository.getAccountByAccountNumber(accountNumber).get();
-        System.out.println("assert: " + accountNumber + " with balance: " + balance + " actualBalance: " + account.getBalance());
+        System.out.println("assert: act[" + accountNumber + "] with balance: " + balance + " actualBalance: " + account.getBalance());
         assert account.getBalance().equals(balance);
     }
 

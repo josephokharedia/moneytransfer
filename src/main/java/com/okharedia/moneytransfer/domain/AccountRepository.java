@@ -11,7 +11,7 @@ public interface AccountRepository {
      * @param accounts - list of accounts that need balance updated
      * @throws AccountNotFoundException - when account is not found
      */
-    void updateBalanceAtomically(Account... accounts) throws AccountNotFoundException;
+    void saveAtomically(Account... accounts) throws AccountNotFoundException;
 
     /**
      * Find account by account number
