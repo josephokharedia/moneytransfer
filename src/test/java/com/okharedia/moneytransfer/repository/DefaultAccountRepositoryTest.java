@@ -6,18 +6,21 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
 import java.math.BigDecimal;
+import java.util.List;
 import java.util.Optional;
+import java.util.concurrent.CopyOnWriteArrayList;
 
 class DefaultAccountRepositoryTest {
 
     private DefaultAccountRepository accountRepository;
-    private final String TEST_ACCOUNT_NUMBER = "TEST";
+    private String TEST_ACCOUNT_NUMBER = "TEST";
+
 
     @BeforeEach
     public void setup() {
-        accountRepository = new DefaultAccountRepository();
-        Account account = new Account(TEST_ACCOUNT_NUMBER);
-        accountRepository.ACCOUNTS.add(account);
+        List<Account> accounts = new CopyOnWriteArrayList<>();
+        accountRepository = new DefaultAccountRepository(accounts);
+        accounts.add(new Account(TEST_ACCOUNT_NUMBER));
     }
 
     @Test
@@ -36,7 +39,7 @@ class DefaultAccountRepositoryTest {
     public void testUpdateBalance() throws AccountNotFoundException {
         BigDecimal newBalance = BigDecimal.valueOf(20);
         accountRepository.updateBalance(TEST_ACCOUNT_NUMBER, newBalance);
-        Optional<Account> account = accountRepository.ACCOUNTS.stream()
+        Optional<Account> account = accountRepository.accounts.stream()
                 .filter(a -> TEST_ACCOUNT_NUMBER.equalsIgnoreCase(a.getAccountNumber()))
                 .findAny();
 
