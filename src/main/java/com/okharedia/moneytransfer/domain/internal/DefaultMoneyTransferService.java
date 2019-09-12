@@ -1,10 +1,6 @@
 package com.okharedia.moneytransfer.domain.internal;
 
-import com.okharedia.moneytransfer.domain.Account;
-import com.okharedia.moneytransfer.domain.InsufficientFundsException;
-import com.okharedia.moneytransfer.domain.MoneyTransferService;
-import com.okharedia.moneytransfer.domain.AccountNotFoundException;
-import com.okharedia.moneytransfer.domain.AccountRepository;
+import com.okharedia.moneytransfer.domain.*;
 
 import java.math.BigDecimal;
 
