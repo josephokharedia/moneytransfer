@@ -7,14 +7,18 @@ import com.okharedia.moneytransfer.domain.internal.DefaultMoneyTransferService;
 import com.okharedia.moneytransfer.repository.DefaultAccountRepository;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.mockito.ArgumentCaptor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
 
 import java.math.BigDecimal;
+import java.util.Arrays;
+import java.util.List;
 import java.util.Optional;
 
-import static org.mockito.Mockito.*;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
 
 class DefaultMoneyTransferServiceTest {
 
@@ -55,7 +59,14 @@ class DefaultMoneyTransferServiceTest {
         verify(accountRepository).getAccountByAccountNumber(fromAccount.getAccountNumber());
         verify(accountRepository).getAccountByAccountNumber(toAccount.getAccountNumber());
 
-        verify(accountRepository).updateBalance(fromAccount.getAccountNumber(), fromAccount.getBalance());
-        verify(accountRepository).updateBalance(toAccount.getAccountNumber(), toAccount.getBalance());
+        ArgumentCaptor<Account> argumentCaptor = ArgumentCaptor.forClass(Account.class);
+        verify(accountRepository).updateBalanceAtomically(argumentCaptor.capture());
+        List<Account> accounts = argumentCaptor.getAllValues();
+        assert accounts.size() == 2;
+        assert !(isDiffBetweenAccountList(accounts, Arrays.asList(fromAccount, toAccount)));
+    }
+
+    private boolean isDiffBetweenAccountList(List<Account> list1, List<Account> list2) {
+        return list1.retainAll(list2);
     }
 }

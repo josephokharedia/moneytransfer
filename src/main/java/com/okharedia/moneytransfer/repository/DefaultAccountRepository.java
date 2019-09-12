@@ -4,7 +4,6 @@ import com.okharedia.moneytransfer.domain.Account;
 import com.okharedia.moneytransfer.domain.AccountNotFoundException;
 import com.okharedia.moneytransfer.domain.AccountRepository;
 
-import java.math.BigDecimal;
 import java.util.List;
 import java.util.Optional;
 import java.util.concurrent.CopyOnWriteArrayList;
@@ -18,15 +17,16 @@ public class DefaultAccountRepository implements AccountRepository {
     }
 
     @Override
-    public void updateBalance(String accountNumber, BigDecimal newBalance) throws AccountNotFoundException {
-        Account account = getAccountByAccountNumber(accountNumber)
-                .orElseThrow(() -> new AccountNotFoundException(accountNumber));
-        account.setBalance(newBalance);
+    public void updateBalanceAtomically(Account... accounts) throws AccountNotFoundException {
+        for (Account account : accounts) {
+            Account _account = getAccountByAccountNumber(account.getAccountNumber())
+                    .orElseThrow(() -> new AccountNotFoundException(account.getAccountNumber()));
+            _account.setBalance(account.getBalance());
+        }
     }
 
     @Override
     public Optional<Account> getAccountByAccountNumber(String accountNumber) {
-        accounts.iterator();
         return accounts.stream()
                 .filter(a -> a.getAccountNumber().equalsIgnoreCase(accountNumber))
                 .findFirst();

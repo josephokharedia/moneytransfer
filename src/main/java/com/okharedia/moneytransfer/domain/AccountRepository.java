@@ -1,18 +1,17 @@
 package com.okharedia.moneytransfer.domain;
 
-import java.math.BigDecimal;
 import java.util.Optional;
 
 public interface AccountRepository {
 
     /**
-     * Update current balance on an account
+     * Update current balance on an account atomically.
+     * All accounts are updated together successfully or none at all
      *
-     * @param accountNumber - accountNumber of account
-     * @param newBalance    - new current balance of the account
+     * @param accounts - list of accounts that need balance updated
      * @throws AccountNotFoundException - when account is not found
      */
-    void updateBalance(String accountNumber, BigDecimal newBalance) throws AccountNotFoundException;
+    void updateBalanceAtomically(Account... accounts) throws AccountNotFoundException;
 
     /**
      * Find account by account number
