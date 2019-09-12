@@ -33,8 +33,6 @@ class LoadTest {
     @BeforeEach
     public void setup() {
         testAccounts = new ArrayList<>();
-        repository = new DefaultAccountRepository(testAccounts);
-        service = new DefaultMoneyTransferService(repository);
 
         // Add test accounts
         IntStream.rangeClosed(1, 3).forEach(n -> {
@@ -42,6 +40,9 @@ class LoadTest {
             account.setBalance(BigDecimal.valueOf(100));
             testAccounts.add(account);
         });
+
+        repository = new DefaultAccountRepository(testAccounts);
+        service = new DefaultMoneyTransferService(repository);
 
         /* Create transfer instructions and expected results
         -----
