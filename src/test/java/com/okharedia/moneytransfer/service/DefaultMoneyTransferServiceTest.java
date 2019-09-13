@@ -3,6 +3,7 @@ package com.okharedia.moneytransfer.service;
 import com.okharedia.moneytransfer.domain.Account;
 import com.okharedia.moneytransfer.domain.AccountNotFoundException;
 import com.okharedia.moneytransfer.domain.InsufficientFundsException;
+import com.okharedia.moneytransfer.domain.StaleAccountException;
 import com.okharedia.moneytransfer.domain.internal.DefaultMoneyTransferService;
 import com.okharedia.moneytransfer.repository.DefaultAccountRepository;
 import org.junit.jupiter.api.BeforeEach;
@@ -38,15 +39,15 @@ class DefaultMoneyTransferServiceTest {
         toAccount = new Account("TO");
         toAccount.setBalance(BigDecimal.valueOf(0));
 
-        when(accountRepository.getAccountByAccountNumber(fromAccount.getAccountNumber()))
+        when(accountRepository.getAccount(fromAccount.getAccountNumber()))
                 .thenReturn(Optional.of(fromAccount));
 
-        when(accountRepository.getAccountByAccountNumber(toAccount.getAccountNumber()))
+        when(accountRepository.getAccount(toAccount.getAccountNumber()))
                 .thenReturn(Optional.of(toAccount));
     }
 
     @Test
-    public void testMoneyTransfer() throws InsufficientFundsException, AccountNotFoundException {
+    public void testMoneyTransfer() throws InsufficientFundsException, AccountNotFoundException, StaleAccountException {
 
         moneyTransferService.transferMoney(
                 fromAccount.getAccountNumber(),
@@ -56,8 +57,8 @@ class DefaultMoneyTransferServiceTest {
         assert fromAccount.getBalance().equals(BigDecimal.valueOf(99));
         assert toAccount.getBalance().equals(BigDecimal.valueOf(1));
 
-        verify(accountRepository).getAccountByAccountNumber(fromAccount.getAccountNumber());
-        verify(accountRepository).getAccountByAccountNumber(toAccount.getAccountNumber());
+        verify(accountRepository).getAccount(fromAccount.getAccountNumber());
+        verify(accountRepository).getAccount(toAccount.getAccountNumber());
 
         ArgumentCaptor<Account> argumentCaptor = ArgumentCaptor.forClass(Account.class);
         verify(accountRepository).saveAtomically(argumentCaptor.capture());

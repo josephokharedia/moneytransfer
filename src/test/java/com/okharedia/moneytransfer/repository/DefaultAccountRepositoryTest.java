@@ -2,6 +2,7 @@ package com.okharedia.moneytransfer.repository;
 
 import com.okharedia.moneytransfer.domain.Account;
 import com.okharedia.moneytransfer.domain.AccountNotFoundException;
+import com.okharedia.moneytransfer.domain.StaleAccountException;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
@@ -25,23 +26,23 @@ class DefaultAccountRepositoryTest {
 
     @Test
     public void testGetAccount() {
-        Optional<Account> account = accountRepository.getAccountByAccountNumber(TEST_ACCOUNT_NUMBER);
+        Optional<Account> account = accountRepository.getAccount(TEST_ACCOUNT_NUMBER);
         assert account.isPresent();
     }
 
     @Test
     public void withNonExistingAccountNumber_testGetAccount() {
-        Optional<Account> account = accountRepository.getAccountByAccountNumber("Not Exist");
+        Optional<Account> account = accountRepository.getAccount("Not Exist");
         assert !account.isPresent();
     }
 
     @Test
-    public void testUpdateBalance() throws AccountNotFoundException {
+    public void testUpdateBalance() throws AccountNotFoundException, StaleAccountException {
         BigDecimal newBalance = BigDecimal.valueOf(20);
         Account testAccount = new Account(TEST_ACCOUNT_NUMBER);
         testAccount.setBalance(newBalance);
         accountRepository.saveAtomically(testAccount);
-        Optional<Account> account = accountRepository.ACCOUNTS.stream()
+        Optional<Account> account = accountRepository.accountDb.stream()
                 .filter(a -> TEST_ACCOUNT_NUMBER.equalsIgnoreCase(a.getAccountNumber()))
                 .findAny();
 

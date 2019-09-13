@@ -11,11 +11,10 @@ public class H2DatabaseAccountRepository implements AccountRepository {
 
     @Override
     public void saveAtomically(Account... accounts) throws AccountNotFoundException {
-
     }
 
     @Override
-    public Optional<Account> getAccountByAccountNumber(String accountNumber) {
+    public Optional<Account> getAccount(String accountNumber) {
         return Optional.empty();
     }
 }

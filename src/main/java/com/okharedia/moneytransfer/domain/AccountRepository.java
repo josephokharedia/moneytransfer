@@ -10,8 +10,10 @@ public interface AccountRepository {
      *
      * @param accounts - list of accounts that need balance updated
      * @throws AccountNotFoundException - when account is not found
+     * @throws StaleAccountException    - when account currently being saved has old data
+     *                                  because this account has already been updated
      */
-    void saveAtomically(Account... accounts) throws AccountNotFoundException;
+    void saveAtomically(Account... accounts) throws AccountNotFoundException, StaleAccountException;
 
     /**
      * Find account by account number
@@ -19,5 +21,5 @@ public interface AccountRepository {
      * @param accountNumber - accountNumber of account
      * @return - account
      */
-    Optional<Account> getAccountByAccountNumber(String accountNumber);
+    Optional<Account> getAccount(String accountNumber);
 }

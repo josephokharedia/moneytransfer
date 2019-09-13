@@ -3,13 +3,23 @@ package com.okharedia.moneytransfer.domain;
 import java.math.BigDecimal;
 import java.util.Objects;
 
-public class Account {
+public class Account implements Cloneable {
 
     private String accountNumber;
     private BigDecimal balance = BigDecimal.ZERO;
+    private int version;
 
     public Account(String accountNumber) {
         this.accountNumber = accountNumber;
+    }
+
+    public void transfer(BigDecimal amount, Account toAccount) throws InsufficientFundsException {
+        if (this.equals(toAccount)) {
+            throw new IllegalArgumentException("From and To Account must not be equal");
+        }
+
+        this.withdraw(amount);
+        toAccount.deposit(amount);
     }
 
     public void deposit(BigDecimal amount) {
@@ -43,6 +53,10 @@ public class Account {
         return accountNumber;
     }
 
+    public int getVersion() {
+        return version;
+    }
+
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;
@@ -54,5 +68,21 @@ public class Account {
     @Override
     public int hashCode() {
         return Objects.hash(accountNumber);
+    }
+
+    public void setVersion(int version) {
+        this.version = version;
+    }
+
+    public void incrementVersion() {
+        ++this.version;
+    }
+
+    @Override
+    public Account clone() {
+        Account account = new Account(accountNumber);
+        account.setVersion(version);
+        account.setBalance(balance);
+        return account;
     }
 }
