@@ -19,7 +19,6 @@ class LoadTest {
     private MoneyTransferService service;
     private AccountRepository repository;
     private List<Account> testAccounts;
-    private List<TransferInstruction> transferInstructions;
     private List<TransferResult> transferResults;
     private ExecutorService executorService;
     private List<Future<?>> submittedFutures;
@@ -60,7 +59,7 @@ class LoadTest {
         2: 160
         3: 80
        */
-        transferInstructions = Arrays.asList(
+        List<TransferInstruction> transferInstructions = Arrays.asList(
                 new TransferInstruction("1", "2", BigDecimal.valueOf(50)),
                 new TransferInstruction("2", "3", BigDecimal.valueOf(10)),
                 new TransferInstruction("3", "1", BigDecimal.valueOf(10)),
@@ -77,13 +76,14 @@ class LoadTest {
         submittedFutures = new ArrayList<>();
         executorService = Executors.newFixedThreadPool(transferInstructions.size());
         for (TransferInstruction i : transferInstructions) {
-            executorService.submit(() -> {
+            Future<?> future = executorService.submit(() -> {
                 try {
                     service.transferMoney(i.fromAccountNumber, i.toAccountNumber, i.value);
                 } catch (InsufficientFundsException | AccountNotFoundException e) {
                     throw new RuntimeException(e);
                 }
             });
+            submittedFutures.add(future);
         }
     }
 
