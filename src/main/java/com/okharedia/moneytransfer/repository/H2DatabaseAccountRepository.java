@@ -6,10 +6,9 @@ import com.okharedia.moneytransfer.domain.StaleAccountException;
 import org.flywaydb.core.Flyway;
 import org.h2.jdbcx.JdbcConnectionPool;
 
-import java.sql.Connection;
-import java.sql.PreparedStatement;
-import java.sql.ResultSet;
-import java.sql.SQLException;
+import java.sql.*;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Optional;
 import java.util.concurrent.locks.ReentrantLock;
 
@@ -18,6 +17,7 @@ public class H2DatabaseAccountRepository implements AccountRepository {
     private static final String URL = "jdbc:h2:mem:moneytransfer;DB_CLOSE_DELAY=-1";
     private static final String USER = "";
     private static final String PASSWORD = "";
+    private static final String COL_ACCOUNT_NUMBER = "account_number";
     private static final String COL_BALANCE = "balance";
     private static final String COL_VERSION = "version";
 
@@ -27,6 +27,9 @@ public class H2DatabaseAccountRepository implements AccountRepository {
     @SuppressWarnings("SqlResolve")
     private static final String UPDATE_ACCOUNT_BALANCE =
             "update account set balance=?, version=version+1 where account_number=? and version=?";
+    @SuppressWarnings("SqlResolve")
+    private static final String ALL_ACCOUNTS =
+            "select account_number, balance, version from account";
 
 
     JdbcConnectionPool pool;
@@ -130,5 +133,44 @@ public class H2DatabaseAccountRepository implements AccountRepository {
         }
 
         return Optional.ofNullable(account);
+    }
+
+    @Override
+    public List<Account> allAccounts() {
+        Connection connection = null;
+        List<Account> accounts = new ArrayList<>();
+        ResultSet resultSet = null;
+        try {
+
+            connection = pool.getConnection();
+
+            Statement stmt = connection.createStatement();
+            resultSet = stmt.executeQuery(ALL_ACCOUNTS);
+
+            while (resultSet.next()) {
+                Account account = new Account(resultSet.getString(COL_ACCOUNT_NUMBER));
+                account.setBalance(resultSet.getBigDecimal(COL_BALANCE));
+                account.setVersion(resultSet.getInt(COL_VERSION));
+                accounts.add(account);
+            }
+
+        } catch (SQLException e) {
+            throw new RuntimeException(e);
+        } finally {
+            if (connection != null) {
+                try {
+
+                    if (resultSet != null) {
+                        resultSet.close();
+                    }
+                    connection.close();
+
+                } catch (SQLException ex) {
+                    ex.printStackTrace();
+                }
+            }
+        }
+
+        return accounts;
     }
 }

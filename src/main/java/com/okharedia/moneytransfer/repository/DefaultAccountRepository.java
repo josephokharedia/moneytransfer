@@ -5,6 +5,7 @@ import com.okharedia.moneytransfer.domain.AccountNotFoundException;
 import com.okharedia.moneytransfer.domain.AccountRepository;
 import com.okharedia.moneytransfer.domain.StaleAccountException;
 
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 import java.util.Optional;
@@ -60,5 +61,10 @@ public class DefaultAccountRepository implements AccountRepository {
                 .filter(a -> a.getAccountNumber().equals(accountNumber))
                 .findFirst()
                 .map(Account::clone);
+    }
+
+    @Override
+    public List<Account> allAccounts() {
+        return new ArrayList<>(accountDb);
     }
 }

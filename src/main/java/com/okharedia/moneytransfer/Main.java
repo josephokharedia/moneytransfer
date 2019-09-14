@@ -13,7 +13,7 @@ public class Main {
     public static void main(String args[]) throws IOException {
         AccountRepository accountRepository = new H2DatabaseAccountRepository();
         MoneyTransferService moneyTransferService = new DefaultMoneyTransferService(accountRepository);
-        MoneyTransferController moneyTransferController = new MoneyTransferController(moneyTransferService);
+        MoneyTransferController moneyTransferController = new MoneyTransferController(moneyTransferService, accountRepository);
         new WebServer(moneyTransferController).start();
     }
 }

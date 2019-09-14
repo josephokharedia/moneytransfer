@@ -1,5 +1,6 @@
 package com.okharedia.moneytransfer.domain;
 
+import java.util.List;
 import java.util.Optional;
 
 public interface AccountRepository {
@@ -22,4 +23,11 @@ public interface AccountRepository {
      * @return - account
      */
     Optional<Account> getAccount(String accountNumber);
+
+    /**
+     * Returns all accounts in repository
+     *
+     * @return all accounts
+     */
+    List<Account> allAccounts();
 }

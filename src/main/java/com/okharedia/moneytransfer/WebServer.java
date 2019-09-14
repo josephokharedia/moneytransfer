@@ -1,10 +1,12 @@
 package com.okharedia.moneytransfer;
 
+import com.google.gson.Gson;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
 import com.okharedia.moneytransfer.controller.MoneyTransferController;
 import com.okharedia.moneytransfer.controller.MoneyTransferRequest;
+import com.okharedia.moneytransfer.domain.Account;
 import com.sun.net.httpserver.HttpExchange;
 import com.sun.net.httpserver.HttpServer;
 
@@ -12,20 +14,21 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.net.InetSocketAddress;
+import java.util.List;
 
-public class WebServer {
+class WebServer {
 
-    private static final Integer PORT = 8000;
+    static final Integer PORT = 8000;
+    final MoneyTransferController moneyTransferController;
 
-    private final MoneyTransferController moneyTransferController;
-
-    public WebServer(MoneyTransferController moneyTransferController) {
+    WebServer(MoneyTransferController moneyTransferController) {
         this.moneyTransferController = moneyTransferController;
     }
 
     void start() throws IOException {
         HttpServer server = HttpServer.create(new InetSocketAddress(PORT), 0);
 
+        serveAccounts(server);
         serveMoneyTransfer(server);
 
         server.start();
@@ -33,8 +36,8 @@ public class WebServer {
     }
 
 
-    private void serveMoneyTransfer(HttpServer server) {
-        server.createContext("/", he -> {
+    void serveMoneyTransfer(HttpServer server) {
+        server.createContext("/transfer", he -> {
 
             if (!he.getRequestMethod().equalsIgnoreCase("POST")) {
                 failWithMethodNotFoundError(he);
@@ -42,7 +45,6 @@ public class WebServer {
             }
 
             try {
-
                 String request = readRequestBody(he);
 
                 MoneyTransferRequest moneyTransferRequest = deserializeMoneyTransferRequest(request);
@@ -56,6 +58,34 @@ public class WebServer {
             }
 
         });
+    }
+
+    void serveAccounts(HttpServer server) {
+        server.createContext("/accounts", he -> {
+
+            if (!he.getRequestMethod().equalsIgnoreCase("GET")) {
+                failWithMethodNotFoundError(he);
+                return;
+            }
+
+            try {
+                List<Account> accounts = moneyTransferController.allAccounts();
+
+                String response = serializeAccounts(accounts);
+
+                sendResponse(he, response);
+
+            } catch (Exception e) {
+                failWithInternalServerError(he, e);
+            }
+
+        });
+    }
+
+
+    String serializeAccounts(List<Account> accounts) {
+        Gson gson = new Gson();
+        return gson.toJson(accounts);
     }
 
 
@@ -80,7 +110,7 @@ public class WebServer {
         }
     }
 
-    private String readRequestBody(HttpExchange he) throws IOException {
+    String readRequestBody(HttpExchange he) throws IOException {
         int contentLength = Integer.parseInt(he.getRequestHeaders().getFirst("Content-length"));
         InputStream is = he.getRequestBody();
         byte[] data = new byte[contentLength];
@@ -88,7 +118,7 @@ public class WebServer {
         return new String(data);
     }
 
-    private void failWithInternalServerError(HttpExchange he, Throwable t) throws IOException {
+    void failWithInternalServerError(HttpExchange he, Throwable t) throws IOException {
         he.sendResponseHeaders(500, t.getMessage().length());
         OutputStream output = he.getResponseBody();
         output.write(t.getMessage().getBytes());
@@ -96,13 +126,21 @@ public class WebServer {
         he.close();
     }
 
-    private void failWithMethodNotFoundError(HttpExchange he) throws IOException {
+    void failWithMethodNotFoundError(HttpExchange he) throws IOException {
         he.sendResponseHeaders(405, 0);
         he.close();
     }
 
-    private void sendOK(HttpExchange he) throws IOException {
+    void sendOK(HttpExchange he) throws IOException {
         String response = "OK";
+        he.sendResponseHeaders(200, response.length());
+        OutputStream output = he.getResponseBody();
+        output.write(response.getBytes());
+        output.flush();
+        he.close();
+    }
+
+    void sendResponse(HttpExchange he, String response) throws IOException {
         he.sendResponseHeaders(200, response.length());
         OutputStream output = he.getResponseBody();
         output.write(response.getBytes());
