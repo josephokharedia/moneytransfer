@@ -15,16 +15,17 @@ import java.util.concurrent.locks.ReentrantLock;
 
 public class H2DatabaseAccountRepository implements AccountRepository {
 
-    static final String URL = "jdbc:h2:mem:moneytransfer;DB_CLOSE_DELAY=-1";
-    static final String USER = "";
-    static final String PASSWORD = "";
-    static final String COL_BALANCE = "BALANCE";
-    static final String COL_VERSION = "VERSION";
+    private static final String URL = "jdbc:h2:mem:moneytransfer;DB_CLOSE_DELAY=-1";
+    private static final String USER = "";
+    private static final String PASSWORD = "";
+    private static final String COL_BALANCE = "balance";
+    private static final String COL_VERSION = "version";
+
     @SuppressWarnings("SqlResolve")
-    static final String FIND_ACCOUNT_BY_ACCOUNT_NUMBER =
+    private static final String FIND_ACCOUNT_BY_ACCOUNT_NUMBER =
             "select account_number, balance, version from account where account_number=?";
     @SuppressWarnings("SqlResolve")
-    static final String UPDATE_ACCOUNT_BALANCE =
+    private static final String UPDATE_ACCOUNT_BALANCE =
             "update account set balance=?, version=version+1 where account_number=? and version=?";
 
 
