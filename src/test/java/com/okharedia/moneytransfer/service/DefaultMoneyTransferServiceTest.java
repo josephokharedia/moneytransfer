@@ -33,11 +33,8 @@ class DefaultMoneyTransferServiceTest {
     @BeforeEach
     private void setup() {
         MockitoAnnotations.initMocks(this);
-        fromAccount = new Account("FROM");
-        fromAccount.setBalance(BigDecimal.valueOf(100));
-
-        toAccount = new Account("TO");
-        toAccount.setBalance(BigDecimal.valueOf(0));
+        fromAccount = new Account("FROM", BigDecimal.valueOf(100));
+        toAccount = new Account("TO", BigDecimal.valueOf(0));
 
         when(accountRepository.getAccount(fromAccount.getAccountNumber()))
                 .thenReturn(Optional.of(fromAccount));

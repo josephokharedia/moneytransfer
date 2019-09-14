@@ -11,8 +11,7 @@ class AccountTest {
 
     @Test
     public void testDeposit() {
-        Account account = new Account(UUID.randomUUID().toString());
-        account.setBalance(BigDecimal.valueOf(100));
+        Account account = new Account(UUID.randomUUID().toString(), BigDecimal.valueOf(100));
 
         account.deposit(BigDecimal.valueOf(100));
         assert account.getBalance().equals(BigDecimal.valueOf(200));
@@ -20,8 +19,7 @@ class AccountTest {
 
     @Test
     public void throwException_whenDepositNegativeAmount() {
-        Account account = new Account(UUID.randomUUID().toString());
-        account.setBalance(BigDecimal.valueOf(100));
+        Account account = new Account(UUID.randomUUID().toString(), BigDecimal.valueOf(100));
 
         assertThrows(IllegalArgumentException.class, () ->
                 account.deposit(BigDecimal.valueOf(-100)));
@@ -29,8 +27,7 @@ class AccountTest {
 
     @Test
     public void testWithdrawal() throws InsufficientFundsException {
-        Account account = new Account(UUID.randomUUID().toString());
-        account.setBalance(BigDecimal.valueOf(100));
+        Account account = new Account(UUID.randomUUID().toString(), BigDecimal.valueOf(100));
 
         account.withdraw(BigDecimal.valueOf(50));
         assert account.getBalance().equals(BigDecimal.valueOf(50));
@@ -38,8 +35,7 @@ class AccountTest {
 
     @Test
     public void throwException_whenWithdrawNegativeAmount() {
-        Account account = new Account(UUID.randomUUID().toString());
-        account.setBalance(BigDecimal.valueOf(100));
+        Account account = new Account(UUID.randomUUID().toString(), BigDecimal.valueOf(100));
 
         assertThrows(IllegalArgumentException.class, () ->
                 account.withdraw(BigDecimal.valueOf(-100)));
@@ -47,8 +43,7 @@ class AccountTest {
 
     @Test
     public void throwException_whenWithdrawalInsufficientFunds() {
-        Account account = new Account(UUID.randomUUID().toString());
-        account.setBalance(BigDecimal.valueOf(100));
+        Account account = new Account(UUID.randomUUID().toString(), BigDecimal.valueOf(100));
 
         assertThrows(InsufficientFundsException.class, () ->
                 account.withdraw(BigDecimal.valueOf(200)));

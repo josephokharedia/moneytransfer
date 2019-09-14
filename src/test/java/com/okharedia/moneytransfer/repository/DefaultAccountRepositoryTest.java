@@ -20,7 +20,7 @@ class DefaultAccountRepositoryTest {
     @BeforeEach
     public void setup() {
         List<Account> accounts = new ArrayList<>();
-        accounts.add(new Account(TEST_ACCOUNT_NUMBER));
+        accounts.add(new Account(TEST_ACCOUNT_NUMBER, BigDecimal.ZERO));
         accountRepository = new DefaultAccountRepository(accounts);
     }
 
@@ -39,8 +39,7 @@ class DefaultAccountRepositoryTest {
     @Test
     public void testUpdateBalance() throws AccountNotFoundException, StaleAccountException {
         BigDecimal newBalance = BigDecimal.valueOf(20);
-        Account testAccount = new Account(TEST_ACCOUNT_NUMBER);
-        testAccount.setBalance(newBalance);
+        Account testAccount = new Account(TEST_ACCOUNT_NUMBER, newBalance);
         accountRepository.saveAtomically(testAccount);
         Optional<Account> account = accountRepository.accountDb.stream()
                 .filter(a -> TEST_ACCOUNT_NUMBER.equalsIgnoreCase(a.getAccountNumber()))

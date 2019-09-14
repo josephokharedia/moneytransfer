@@ -6,11 +6,18 @@ import java.util.Objects;
 public class Account implements Cloneable {
 
     private String accountNumber;
-    private BigDecimal balance = BigDecimal.ZERO;
+    private BigDecimal balance;
     private int version;
 
-    public Account(String accountNumber) {
+    public Account(String accountNumber, BigDecimal balance) {
         this.accountNumber = accountNumber;
+        this.balance = balance;
+    }
+
+    public Account(String accountNumber, BigDecimal balance, int version) {
+        this.accountNumber = accountNumber;
+        this.balance = balance;
+        this.version = version;
     }
 
     public void transfer(BigDecimal amount, Account toAccount) throws InsufficientFundsException {
@@ -22,15 +29,14 @@ public class Account implements Cloneable {
         toAccount.deposit(amount);
     }
 
-    public void deposit(BigDecimal amount) {
+    void deposit(BigDecimal amount) {
         if (amount.compareTo(BigDecimal.ZERO) < 0) {
             throw new IllegalArgumentException("Amount must be greater than 0");
         }
-        BigDecimal newBalance = getBalance().add(amount);
-        setBalance(newBalance);
+        balance = getBalance().add(amount);
     }
 
-    public void withdraw(BigDecimal amount) throws InsufficientFundsException {
+    void withdraw(BigDecimal amount) throws InsufficientFundsException {
         if (amount.compareTo(BigDecimal.ZERO) < 0) {
             throw new IllegalArgumentException("Amount must be greater than 0");
         }
@@ -38,15 +44,11 @@ public class Account implements Cloneable {
         if (newBalance.compareTo(BigDecimal.ZERO) < 0) {
             throw new InsufficientFundsException();
         }
-        setBalance(newBalance);
+        balance = newBalance;
     }
 
     public BigDecimal getBalance() {
         return balance;
-    }
-
-    public void setBalance(BigDecimal balance) {
-        this.balance = balance;
     }
 
     public String getAccountNumber() {
@@ -70,19 +72,14 @@ public class Account implements Cloneable {
         return Objects.hash(accountNumber);
     }
 
-    public void setVersion(int version) {
-        this.version = version;
-    }
-
-    public void incrementVersion() {
-        ++this.version;
+    public Account newVersion() {
+        Account account = this.clone();
+        ++account.version;
+        return account;
     }
 
     @Override
     public Account clone() {
-        Account account = new Account(accountNumber);
-        account.setVersion(version);
-        account.setBalance(balance);
-        return account;
+        return new Account(accountNumber, balance, version);
     }
 }

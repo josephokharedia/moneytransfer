@@ -6,6 +6,7 @@ import com.okharedia.moneytransfer.domain.StaleAccountException;
 import org.flywaydb.core.Flyway;
 import org.h2.jdbcx.JdbcConnectionPool;
 
+import java.math.BigDecimal;
 import java.sql.*;
 import java.util.ArrayList;
 import java.util.List;
@@ -110,9 +111,9 @@ public class H2DatabaseAccountRepository implements AccountRepository {
             resultSet = pstmt.executeQuery();
 
             while (resultSet.next()) {
-                account = new Account(accountNumber);
-                account.setBalance(resultSet.getBigDecimal(COL_BALANCE));
-                account.setVersion(resultSet.getInt(COL_VERSION));
+                BigDecimal balance = resultSet.getBigDecimal(COL_BALANCE);
+                int version = resultSet.getInt(COL_VERSION);
+                account = new Account(accountNumber, balance, version);
             }
 
         } catch (SQLException e) {
@@ -148,9 +149,11 @@ public class H2DatabaseAccountRepository implements AccountRepository {
             resultSet = stmt.executeQuery(ALL_ACCOUNTS);
 
             while (resultSet.next()) {
-                Account account = new Account(resultSet.getString(COL_ACCOUNT_NUMBER));
-                account.setBalance(resultSet.getBigDecimal(COL_BALANCE));
-                account.setVersion(resultSet.getInt(COL_VERSION));
+                String accountNumber = resultSet.getString(COL_ACCOUNT_NUMBER);
+                BigDecimal balance = resultSet.getBigDecimal(COL_BALANCE);
+                int version = resultSet.getInt(COL_VERSION);
+                Account account = new Account(accountNumber, balance, version);
+
                 accounts.add(account);
             }
 

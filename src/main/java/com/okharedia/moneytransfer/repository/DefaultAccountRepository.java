@@ -45,7 +45,7 @@ public class DefaultAccountRepository implements AccountRepository {
                     .forEach(account -> {
 
                         int idx = this.accountDb.indexOf(account);
-                        account.incrementVersion();
+                        account = account.newVersion();
                         this.accountDb.set(idx, account);
 
                     });

@@ -68,8 +68,7 @@ class LoadTest {
 
         // Add test accounts
         IntStream.rangeClosed(1, 3).forEach(n -> {
-            Account account = new Account(String.valueOf(n));
-            account.setBalance(BigDecimal.valueOf(100));
+            Account account = new Account(String.valueOf(n), BigDecimal.valueOf(100));
             testAccounts.add(account);
         });
 
