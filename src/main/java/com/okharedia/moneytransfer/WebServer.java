@@ -13,9 +13,12 @@ import com.sun.net.httpserver.HttpServer;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.math.BigDecimal;
 import java.net.InetSocketAddress;
 import java.util.Collections;
 import java.util.List;
+import java.util.Optional;
+import java.util.function.Function;
 
 class WebServer {
 
@@ -95,19 +98,27 @@ class WebServer {
         JsonElement element = jsonParser.parse(request);
 
         if (!element.isJsonObject()) {
-            throw new IllegalArgumentException("Failed to parse request");
+            throw new IllegalArgumentException("Failed to parse request: request is not a Json object");
         }
 
+
         try {
-            JsonObject jsonObject = element.getAsJsonObject();
+            final JsonObject jsonObject = element.getAsJsonObject();
+
+            Function<String, String> getFieldAsStringOrNull = field ->
+                    Optional.ofNullable(jsonObject.get(field)).map(JsonElement::getAsString).orElse(null);
+
+            Function<String, BigDecimal> getFieldAsBigDecimalOrNull = field ->
+                    Optional.ofNullable(jsonObject.get(field)).map(JsonElement::getAsBigDecimal).orElse(null);
+
             return MoneyTransferRequest.newRequestBuilder()
-                    .fromAccount(jsonObject.get("fromAccount").getAsString())
-                    .toAccount(jsonObject.get("toAccount").getAsString())
-                    .amount(jsonObject.get("amount").getAsBigDecimal())
+                    .fromAccount(getFieldAsStringOrNull.apply("fromAccount"))
+                    .toAccount(getFieldAsStringOrNull.apply("toAccount"))
+                    .amount(getFieldAsBigDecimalOrNull.apply("amount"))
                     .build();
 
         } catch (Exception e) {
-            throw new IllegalArgumentException("Failed to parse request", e);
+            throw new IllegalArgumentException("Failed to parse request: " + e.getMessage(), e);
         }
     }
 

@@ -7,16 +7,16 @@ public class MoneyTransferRequest {
 
     private String fromAccount;
     private String toAccount;
-    private BigDecimal amount = BigDecimal.ZERO;
+    private BigDecimal amount;
 
     public static Builder newRequestBuilder() {
         return new Builder();
     }
 
     private MoneyTransferRequest(Builder builder) {
-        Objects.requireNonNull(builder.fromAccount);
-        Objects.requireNonNull(builder.toAccount);
-        Objects.requireNonNull(builder.amount);
+        Objects.requireNonNull(builder.fromAccount, "fromAccount is required");
+        Objects.requireNonNull(builder.toAccount, "toAccount is required");
+        Objects.requireNonNull(builder.amount, "amount is required");
 
         this.fromAccount = builder.fromAccount;
         this.toAccount = builder.toAccount;
