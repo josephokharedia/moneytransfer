@@ -3,6 +3,7 @@ package com.okharedia.moneytransfer.loadtest;
 import com.okharedia.moneytransfer.domain.*;
 import com.okharedia.moneytransfer.domain.internal.DefaultMoneyTransferService;
 import com.okharedia.moneytransfer.repository.DefaultAccountRepository;
+import com.okharedia.moneytransfer.repository.H2DatabaseAccountRepository;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -16,9 +17,7 @@ import java.util.stream.IntStream;
 
 class LoadTest {
 
-    private MoneyTransferService service;
-    private AccountRepository repository;
-    private List<Account> testAccounts;
+    List<TransferInstruction> transferInstructions;
     private List<TransferResult> transferResults;
     private ExecutorService executorService;
     private List<Future<?>> submittedFutures;
@@ -31,17 +30,7 @@ class LoadTest {
 
     @BeforeEach
     public void setup() {
-        testAccounts = new ArrayList<>();
 
-        // Add test accounts
-        IntStream.rangeClosed(1, 3).forEach(n -> {
-            Account account = new Account(String.valueOf(n));
-            account.setBalance(BigDecimal.valueOf(100));
-            testAccounts.add(account);
-        });
-
-        repository = new DefaultAccountRepository(testAccounts);
-        service = new DefaultMoneyTransferService(repository);
 
         /* Create transfer instructions and expected results
         -----
@@ -59,7 +48,7 @@ class LoadTest {
         2: 160
         3: 80
        */
-        List<TransferInstruction> transferInstructions = Arrays.asList(
+        transferInstructions = Arrays.asList(
                 new TransferInstruction("1", "2", BigDecimal.valueOf(50)),
                 new TransferInstruction("2", "3", BigDecimal.valueOf(10)),
                 new TransferInstruction("3", "1", BigDecimal.valueOf(10)),
@@ -71,10 +60,41 @@ class LoadTest {
                 new TransferResult("2", BigDecimal.valueOf(160)),
                 new TransferResult("3", BigDecimal.valueOf(80))
         );
+    }
 
+    @Test
+    public void testDefaultRepository() throws ExecutionException, InterruptedException {
+        List<Account> testAccounts = new ArrayList<>();
+
+        // Add test accounts
+        IntStream.rangeClosed(1, 3).forEach(n -> {
+            Account account = new Account(String.valueOf(n));
+            account.setBalance(BigDecimal.valueOf(100));
+            testAccounts.add(account);
+        });
+
+        AccountRepository repository = new DefaultAccountRepository(testAccounts);
+        MoneyTransferService service = new DefaultMoneyTransferService(repository);
+
+        submitAllTransferInstructions(service);
+        waitUntilAllTransfersCompleted();
+        assertAllTransfers(repository);
+    }
+
+    @Test
+    public void testH2DatabaseRepository() throws ExecutionException, InterruptedException {
+        AccountRepository repository = new H2DatabaseAccountRepository();
+        MoneyTransferService service = new DefaultMoneyTransferService(repository);
+
+        submitAllTransferInstructions(service);
+        waitUntilAllTransfersCompleted();
+        assertAllTransfers(repository);
+    }
+
+    private void submitAllTransferInstructions(MoneyTransferService service) {
         // Setup Executor service threads to run all transfer instructions
         submittedFutures = new ArrayList<>();
-        executorService = Executors.newFixedThreadPool(transferInstructions.size());
+        executorService = Executors.newFixedThreadPool(3/*transferInstructions.size()*/);
         for (TransferInstruction i : transferInstructions) {
             Future<?> future = executorService.submit(() -> {
                 try {
@@ -87,15 +107,9 @@ class LoadTest {
         }
     }
 
-    @Test
-    public void run() throws ExecutionException, InterruptedException {
-        waitUntilAllTransfersCompleted();
-        assertAllTransfers();
-    }
-
-    private void assertAllTransfers() {
+    private void assertAllTransfers(AccountRepository repository) {
         for (TransferResult transferResult : transferResults) {
-            assertBalance(transferResult.accountNumber, transferResult.balance);
+            assertBalance(repository, transferResult.accountNumber, transferResult.balance);
         }
     }
 
@@ -105,10 +119,10 @@ class LoadTest {
         }
     }
 
-    private void assertBalance(String accountNumber, BigDecimal balance) {
+    private void assertBalance(AccountRepository repository, String accountNumber, BigDecimal balance) {
         Account account = repository.getAccount(accountNumber).get();
         System.out.println("assert: act[" + accountNumber + "] with balance: " + balance + " actualBalance: " + account.getBalance());
-        assert account.getBalance().equals(balance);
+        assert account.getBalance().compareTo(balance) == 0;
     }
 
 

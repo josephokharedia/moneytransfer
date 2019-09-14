@@ -8,7 +8,7 @@ public interface AccountRepository {
      * Update current balance on an account atomically.
      * All accounts are updated together successfully or none at all
      *
-     * @param accounts - list of accounts that need balance updated
+     * @param accounts - list of accounts that needs to be saved
      * @throws AccountNotFoundException - when account is not found
      * @throws StaleAccountException    - when account currently being saved has old data
      *                                  because this account has already been updated

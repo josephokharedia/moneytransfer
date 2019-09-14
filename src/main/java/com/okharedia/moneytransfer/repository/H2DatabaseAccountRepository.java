@@ -43,11 +43,91 @@ public class H2DatabaseAccountRepository implements AccountRepository {
 
 
     @Override
-    public void saveAtomically(Account... accounts) throws AccountNotFoundException {
+    public void saveAtomically(Account... accounts) throws StaleAccountException {
+        Connection connection = null;
+        try {
+
+            connection = pool.getConnection();
+
+            connection.setAutoCommit(false);
+
+            lock.lock();
+            for (Account account : accounts) {
+
+                PreparedStatement pstmt = connection.prepareStatement(UPDATE_ACCOUNT_BALANCE);
+                pstmt.setBigDecimal(1, account.getBalance());
+                pstmt.setString(2, account.getAccountNumber());
+                pstmt.setInt(3, account.getVersion());
+
+                int count = pstmt.executeUpdate();
+                if (count != 1) {
+                    throw new StaleAccountException(account.getAccountNumber());
+                }
+            }
+
+            connection.commit();
+
+        } catch (SQLException e) {
+            if (connection != null) {
+                try {
+
+                    connection.rollback();
+
+                } catch (SQLException ex) {
+                    ex.printStackTrace();
+                }
+            }
+            throw new RuntimeException(e);
+        } finally {
+            lock.unlock();
+            if (connection != null) {
+                try {
+
+                    connection.close();
+
+                } catch (SQLException ex) {
+                    ex.printStackTrace();
+                }
+            }
+        }
     }
 
     @Override
     public Optional<Account> getAccount(String accountNumber) {
-        return Optional.empty();
+        Connection connection = null;
+        Account account = null;
+        ResultSet resultSet = null;
+        try {
+
+            connection = pool.getConnection();
+
+            PreparedStatement pstmt = connection.prepareStatement(FIND_ACCOUNT_BY_ACCOUNT_NUMBER);
+            pstmt.setString(1, accountNumber);
+            resultSet = pstmt.executeQuery();
+
+            while (resultSet.next()) {
+                account = new Account(accountNumber);
+                account.setBalance(resultSet.getBigDecimal(COL_BALANCE));
+                account.setVersion(resultSet.getInt(COL_VERSION));
+            }
+
+        } catch (SQLException e) {
+            throw new RuntimeException(e);
+        } finally {
+            if (connection != null) {
+                try {
+
+                    if (resultSet != null) {
+                        resultSet.close();
+                    }
+                    connection.close();
+
+                } catch (SQLException ex) {
+                    ex.printStackTrace();
+                }
+            }
+        }
+
+        return Optional.ofNullable(account);
     }
 }
