@@ -14,6 +14,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.net.InetSocketAddress;
+import java.util.Collections;
 import java.util.List;
 
 class WebServer {
@@ -141,6 +142,7 @@ class WebServer {
     }
 
     void sendResponse(HttpExchange he, String response) throws IOException {
+        he.getResponseHeaders().put("Content-Type", Collections.singletonList("application/json"));
         he.sendResponseHeaders(200, response.length());
         OutputStream output = he.getResponseBody();
         output.write(response.getBytes());

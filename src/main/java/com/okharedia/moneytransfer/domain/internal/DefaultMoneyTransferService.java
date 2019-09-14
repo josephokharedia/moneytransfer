@@ -24,10 +24,10 @@ public class DefaultMoneyTransferService implements MoneyTransferService {
         do {
             try {
                 Account fromAccount = accountRepository.getAccount(fromAccountNumber)
-                        .orElseThrow(() -> new AccountNotFoundException(fromAccountNumber));
+                        .orElseThrow(() -> new AccountNotFoundException("account " + fromAccountNumber + " does not exist"));
 
                 Account toAccount = accountRepository.getAccount(toAccountNumber)
-                        .orElseThrow(() -> new AccountNotFoundException(fromAccountNumber));
+                        .orElseThrow(() -> new AccountNotFoundException("account " + toAccountNumber + " does not exist"));
 
                 fromAccount.transfer(amount, toAccount);
 
