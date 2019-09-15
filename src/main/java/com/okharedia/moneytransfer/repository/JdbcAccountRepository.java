@@ -34,25 +34,28 @@ abstract class JdbcAccountRepository implements AccountRepository {
 
     @Override
     public void saveAtomically(Account... accounts) throws AccountNotFoundException, StaleAccountException {
-
         try (Connection connection = getConnection()) {
-            connection.setAutoCommit(false);
+            boolean oldAutoCommit = connection.getAutoCommit();
+            try {
 
-            for (Account account : accounts) {
+                connection.setAutoCommit(false);
 
-                PreparedStatement pstmt = connection.prepareStatement(UPDATE_ACCOUNT_BALANCE);
-                pstmt.setBigDecimal(1, account.getBalance());
-                pstmt.setString(2, account.getAccountNumber());
-                pstmt.setInt(3, account.getVersion());
-
-                int count = pstmt.executeUpdate();
-                if (count != 1) {
-                    throw new StaleAccountException(account.getAccountNumber());
+                for (Account account : accounts) {
+                    PreparedStatement stmt = connection.prepareStatement(UPDATE_ACCOUNT_BALANCE);
+                    stmt.setBigDecimal(1, account.getBalance());
+                    stmt.setString(2, account.getAccountNumber());
+                    stmt.setInt(3, account.getVersion());
+                    if (stmt.executeUpdate() != 1) {
+                        throw new StaleAccountException(account.getAccountNumber());
+                    }
                 }
+                connection.commit();
+            } catch (SQLException | StaleAccountException e) {
+                connection.rollback();
+                throw e;
+            } finally {
+                connection.setAutoCommit(oldAutoCommit);
             }
-
-            connection.commit();
-
         } catch (SQLException e) {
             throw new RuntimeException(e);
         }
@@ -61,7 +64,6 @@ abstract class JdbcAccountRepository implements AccountRepository {
     @Override
     public Optional<Account> getAccount(String accountNumber) {
         Account account = null;
-
         try (Connection connection = getConnection();
              PreparedStatement stmt = connection.prepareStatement(FIND_ACCOUNT_BY_ACCOUNT_NUMBER)) {
             stmt.setString(1, accountNumber);
@@ -71,7 +73,6 @@ abstract class JdbcAccountRepository implements AccountRepository {
                 int version = resultSet.getInt(COL_VERSION);
                 account = new Account(accountNumber, balance, version);
             }
-
         } catch (SQLException e) {
             throw new RuntimeException(e);
         }
@@ -82,7 +83,6 @@ abstract class JdbcAccountRepository implements AccountRepository {
     @Override
     public List<Account> allAccounts() {
         List<Account> accounts = new ArrayList<>();
-
         try (Connection connection = getConnection();
              PreparedStatement stmt = connection.prepareStatement(ALL_ACCOUNTS)) {
             ResultSet resultSet = stmt.executeQuery();

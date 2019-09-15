@@ -41,6 +41,9 @@ public class DefaultMoneyTransferService implements MoneyTransferService {
                     throw new RuntimeException("Max reties exceeded for transfer money", e);
                 }
 
+                System.out.println(String.format("[%s] StaleAccountException: " + "retrying amount:[%s] from:[%s] to[%s]",
+                        Thread.currentThread().getName(), amount, fromAccountNumber, toAccountNumber));
+
                 decrementRetryTransferMoney();
             }
         } while (retryTransferMoneyRemaining() && staleAccountExceptionIsRaised);

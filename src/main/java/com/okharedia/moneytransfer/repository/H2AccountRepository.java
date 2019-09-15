@@ -11,7 +11,7 @@ import java.sql.SQLException;
 public class H2AccountRepository extends JdbcAccountRepository {
 
     static final String URL = "jdbc:h2:mem:moneytransfer;DB_CLOSE_DELAY=-1";
-//    static final String URL = "jdbc:h2:~/test";
+    //    static final String URL = "jdbc:h2:~/test";
     static final String USER = "";
     static final String PASSWORD = "";
 
@@ -40,9 +40,15 @@ public class H2AccountRepository extends JdbcAccountRepository {
         return PASSWORD;
     }
 
+
     @Override
     public void saveAtomically(Account... accounts) throws AccountNotFoundException, StaleAccountException {
         try {
+            /*
+             * H2 cannot handle multi threaded row lock concurrency well.
+             * It falls into a trap of detecting deadlocks among connection transactions and fails hard when it finds one.
+             * For this reason, I will be using a more pessimistic approach by using application locks to prevent deadlocks
+             */
             lock.lock();
             super.saveAtomically(accounts);
         } finally {

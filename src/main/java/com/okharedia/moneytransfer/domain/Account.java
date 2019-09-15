@@ -82,4 +82,13 @@ public class Account implements Cloneable {
     public Account clone() {
         return new Account(accountNumber, balance, version);
     }
+
+    @Override
+    public String toString() {
+        return "Account{" +
+                "accountNumber='" + accountNumber + '\'' +
+                ", balance=" + balance +
+                ", version=" + version +
+                '}';
+    }
 }

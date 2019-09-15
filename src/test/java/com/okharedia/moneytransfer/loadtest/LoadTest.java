@@ -66,7 +66,7 @@ class LoadTest {
     }
 
     @Test
-    public void testDefaultRepository() throws ExecutionException, InterruptedException {
+    public void testDefaultRepository() throws ExecutionException, InterruptedException, AccountNotFoundException, StaleAccountException {
         List<Account> testAccounts = new ArrayList<>();
 
         // Add test accounts
@@ -78,9 +78,7 @@ class LoadTest {
         AccountRepository repository = new DefaultAccountRepository(testAccounts);
         MoneyTransferService service = new DefaultMoneyTransferService(repository);
 
-        submitAllTransferInstructions(service);
-        waitUntilAllTransfersCompleted();
-        assertAllTransfers(repository);
+        runWith(repository, service);
     }
 
     @Test
@@ -88,10 +86,7 @@ class LoadTest {
         AccountRepository repository = new H2AccountRepository();
         MoneyTransferService service = new DefaultMoneyTransferService(repository);
 
-        resetBalancesOfAllAccounts(repository, BigDecimal.valueOf(100));
-        submitAllTransferInstructions(service);
-        waitUntilAllTransfersCompleted();
-        assertAllTransfers(repository);
+        runWith(repository, service);
     }
 
     @Test
@@ -99,18 +94,30 @@ class LoadTest {
         AccountRepository repository = new PostgresAccountRepository();
         MoneyTransferService service = new DefaultMoneyTransferService(repository);
 
+        runWith(repository, service);
+    }
+
+    private void runWith(AccountRepository repository, MoneyTransferService service) throws AccountNotFoundException, StaleAccountException, ExecutionException, InterruptedException {
         resetBalancesOfAllAccounts(repository, BigDecimal.valueOf(100));
+        printAllAccounts(repository);
         submitAllTransferInstructions(service);
         waitUntilAllTransfersCompleted();
         assertAllTransfers(repository);
     }
 
+    private void printAllAccounts(AccountRepository repository) {
+        repository.allAccounts().forEach(System.out::println);
+        System.out.println();
+    }
+
     private void resetBalancesOfAllAccounts(AccountRepository repository, BigDecimal balance) throws AccountNotFoundException, StaleAccountException {
+        System.out.println("resetting all accounts to balance:[" + balance + "]");
         Account[] accounts = repository.allAccounts().stream()
                 .map(a -> new Account(a.getAccountNumber(), balance, a.getVersion()))
                 .toArray(Account[]::new);
 
         repository.saveAtomically(accounts);
+        System.out.println();
     }
 
     private void submitAllTransferInstructions(MoneyTransferService service) {
@@ -119,6 +126,8 @@ class LoadTest {
         for (TransferInstruction i : transferInstructions) {
             Future<?> future = executorService.submit(() -> {
                 try {
+                    System.out.printf("[%s] transferring amount:[%s]  from:[%s] to:[%s]%n",
+                            Thread.currentThread().getName(), i.value, i.fromAccountNumber, i.toAccountNumber);
                     service.transferMoney(i.fromAccountNumber, i.toAccountNumber, i.value);
                 } catch (InsufficientFundsException | AccountNotFoundException e) {
                     throw new RuntimeException(e);
@@ -129,9 +138,11 @@ class LoadTest {
     }
 
     private void assertAllTransfers(AccountRepository repository) {
+        System.out.println();
         for (TransferResult transferResult : transferResults) {
             assertBalance(repository, transferResult.accountNumber, transferResult.balance);
         }
+        System.out.println();
     }
 
     private void waitUntilAllTransfersCompleted() throws ExecutionException, InterruptedException {
