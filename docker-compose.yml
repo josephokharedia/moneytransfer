@@ -1,0 +1,18 @@
+version: '3'
+services:
+  postgres:
+    image: postgres
+    ports:
+      - 5432:5432
+    environment:
+      POSTGRES_PASSWORD: 'postgres'
+      POSTGRES_USER: 'postgres'
+      POSTGRES_DB: 'postgres'
+    volumes:
+      - db-data:/var/lib/postgresql/data
+
+volumes:
+  db-data:
+    driver_opts:
+      type: tmpfs
+      device: tmpfs

@@ -8,14 +8,14 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.Optional;
 
-class H2DatabaseAccountRepositoryTest {
+class H2AccountRepositoryTest {
 
-    private H2DatabaseAccountRepository repository;
+    private H2AccountRepository repository;
     private List<String> testAccountNumbers = Arrays.asList("1", "2", "3");
 
     @BeforeEach
     public void setup() {
-        repository = new H2DatabaseAccountRepository();
+        repository = new H2AccountRepository();
     }
 
     @Test

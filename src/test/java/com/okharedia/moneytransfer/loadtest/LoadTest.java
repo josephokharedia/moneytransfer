@@ -3,7 +3,8 @@ package com.okharedia.moneytransfer.loadtest;
 import com.okharedia.moneytransfer.domain.*;
 import com.okharedia.moneytransfer.domain.internal.DefaultMoneyTransferService;
 import com.okharedia.moneytransfer.repository.DefaultAccountRepository;
-import com.okharedia.moneytransfer.repository.H2DatabaseAccountRepository;
+import com.okharedia.moneytransfer.repository.H2AccountRepository;
+import com.okharedia.moneytransfer.repository.PostgresAccountRepository;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -60,6 +61,8 @@ class LoadTest {
                 new TransferResult("2", BigDecimal.valueOf(160)),
                 new TransferResult("3", BigDecimal.valueOf(80))
         );
+
+        executorService = Executors.newFixedThreadPool(3/*transferInstructions.size()*/);
     }
 
     @Test
@@ -81,19 +84,38 @@ class LoadTest {
     }
 
     @Test
-    public void testH2DatabaseRepository() throws ExecutionException, InterruptedException {
-        AccountRepository repository = new H2DatabaseAccountRepository();
+    public void testH2Repository() throws ExecutionException, InterruptedException, AccountNotFoundException, StaleAccountException {
+        AccountRepository repository = new H2AccountRepository();
         MoneyTransferService service = new DefaultMoneyTransferService(repository);
 
+        resetBalancesOfAllAccounts(repository, BigDecimal.valueOf(100));
         submitAllTransferInstructions(service);
         waitUntilAllTransfersCompleted();
         assertAllTransfers(repository);
     }
 
+    @Test
+    public void testPostgresRepository() throws ExecutionException, InterruptedException, AccountNotFoundException, StaleAccountException {
+        AccountRepository repository = new PostgresAccountRepository();
+        MoneyTransferService service = new DefaultMoneyTransferService(repository);
+
+        resetBalancesOfAllAccounts(repository, BigDecimal.valueOf(100));
+        submitAllTransferInstructions(service);
+        waitUntilAllTransfersCompleted();
+        assertAllTransfers(repository);
+    }
+
+    private void resetBalancesOfAllAccounts(AccountRepository repository, BigDecimal balance) throws AccountNotFoundException, StaleAccountException {
+        Account[] accounts = repository.allAccounts().stream()
+                .map(a -> new Account(a.getAccountNumber(), balance, a.getVersion()))
+                .toArray(Account[]::new);
+
+        repository.saveAtomically(accounts);
+    }
+
     private void submitAllTransferInstructions(MoneyTransferService service) {
         // Setup Executor service threads to run all transfer instructions
         submittedFutures = new ArrayList<>();
-        executorService = Executors.newFixedThreadPool(3/*transferInstructions.size()*/);
         for (TransferInstruction i : transferInstructions) {
             Future<?> future = executorService.submit(() -> {
                 try {
